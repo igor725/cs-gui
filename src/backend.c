@@ -30,5 +30,8 @@ void Backend_AppendLog(cs_str str) {
     buffpos -= offset;
   }
   buffpos += String_Copy(conbuff + buffpos, BUFFER_SIZE, str);
+}
+
+void Backend_UpdateLog(void) {
   Backend_SetConsoleText(conbuff);
 }

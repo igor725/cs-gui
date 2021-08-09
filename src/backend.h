@@ -7,4 +7,5 @@ void Backend_WindowLoop(void);
 void Backend_CloseWindow(void);
 void Backend_SetConsoleText(cs_str txt);
 void Backend_AppendLog(cs_str str);
+void Backend_UpdateLog(void);
 #endif

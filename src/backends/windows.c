@@ -72,6 +72,7 @@ static void CallCommand(cs_str cmd, cs_str args) {
     Log_Info(out);
     String_Append(out, MAX_CMD_OUT, "\r\n");
     Backend_AppendLog(out);
+    Backend_UpdateLog();
   }
 }
 
@@ -98,6 +99,7 @@ static void PrintPlayerInfo(Client *client) {
     Client_GetModel(client)
   );
   Backend_AppendLog(buf);
+  Backend_UpdateLog();
 }
 
 static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
