@@ -20,7 +20,7 @@ void Backend_CreateWindow(void) {
   hWnd_g = CreateWindowEx(
     0, wc.lpszClassName,
     "Minecraft Classic server",
-    WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
+    WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME, CW_USEDEFAULT,
     CW_USEDEFAULT, 854, 477,
     NULL, NULL, NULL, NULL
   );
@@ -29,7 +29,7 @@ void Backend_CreateWindow(void) {
   ShowWindow(hWnd_g, SW_SHOW);
 }
 
-static void AppendString(cs_str str) {
+static void AppendOutput(cs_str str) {
   if(buffpos + 160 >= BUFFER_SIZE) {
     cs_str fn = String_FirstChar(conbuff, '\n');
     cs_size offset = fn - conbuff + 1;
@@ -79,19 +79,89 @@ static void SetupWindow(HWND hWnd) {
   );
 }
 
+static void CallCommand(cs_str cmd, cs_str args) {
+  CommandCallData ccdata;
+  cs_char out[MAX_CMD_OUT];
+  cs_bool haveOutput = true;
+
+  Command *opc = Command_GetByName(cmd);
+  if(opc) {
+    ccdata.caller = NULL;
+    ccdata.command = opc;
+    ccdata.args = args;
+    ccdata.out = out;
+    haveOutput = opc->func(&ccdata);
+  } else
+    String_Copy(out, MAX_CMD_OUT, "Unknown command");
+
+  if(haveOutput) {
+    Log_Info(out);
+    String_Append(out, MAX_CMD_OUT, "\r\n");
+    AppendOutput(out);
+  }
+}
+
+static void PrintPlayerInfo(Client *client) {
+  cs_char buf[512];
+  String_FormatBuf(
+    buf, 512,
+    "Info about %s\r\n"
+    "  Client: %s\r\n"
+    "  Is OP: %s\r\n"
+    "  Ping: %d\r\n"
+    "  IP: %d.%d.%d.%d\r\n"
+    "  World: %s\r\n"
+    "  Player model: %d\r\n",
+    Client_GetName(client),
+    Client_GetAppName(client),
+    Client_IsOP(client) ? "yes" : "no",
+    Client_GetPing(client),
+    client->addr & 0xFF,
+    (client->addr >> 8) & 0xFF,
+    (client->addr >> 16) & 0xFF,
+    (client->addr >> 24) & 0xFF,
+    World_GetName(Client_GetWorld(client)),
+    Client_GetModel(client)
+  );
+  AppendOutput(buf);
+}
+
 static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
   cs_char playername[64];
   LRESULT item = SendMessage(hList, LB_GETCURSEL, (WPARAM)0, (LPARAM)0);
   if(item != LB_ERR) {
     SendMessage(hList, LB_GETTEXT, (WPARAM)item, (LPARAM)playername);
-    HMENU hMenu = CreatePopupMenu();
-    InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING | MF_GRAYED, 0, playername);
-    InsertMenu(hMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
-    InsertMenu(hMenu, 2, MF_BYPOSITION | MF_STRING, 1, "Kick");
-    InsertMenu(hMenu, 3, MF_BYPOSITION | MF_STRING, 2, "Ban");
-    InsertMenu(hMenu, 4, MF_BYPOSITION | MF_STRING, 3, "Make OP");
-    InsertMenu(hMenu, 5, MF_BYPOSITION | MF_STRING, 4, "Info");
-    TrackPopupMenu(hMenu, TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd_g, NULL);
+    Client *client = Client_GetByName(playername);
+    if(client) {
+      HMENU hMenu = CreatePopupMenu();
+      InsertMenu(hMenu, 0, MF_BYPOSITION | MF_STRING | MF_GRAYED, 0, playername);
+      InsertMenu(hMenu, 1, MF_BYPOSITION | MF_SEPARATOR, 0, NULL);
+      InsertMenu(hMenu, 2, MF_BYPOSITION | MF_STRING, 1, "Kick");
+      InsertMenu(hMenu, 3, MF_BYPOSITION | MF_STRING, 2, "Ban");
+      if(Client_IsOP(client))
+        InsertMenu(hMenu, 4, MF_BYPOSITION | MF_STRING, 3, "Revoke OP");
+      else
+        InsertMenu(hMenu, 4, MF_BYPOSITION | MF_STRING, 3, "Make OP");
+      InsertMenu(hMenu, 5, MF_BYPOSITION | MF_STRING, 4, "Info");
+
+      switch (TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_TOPALIGN | TPM_LEFTALIGN, x, y, 0, hWnd, NULL)) {
+        case 0: break;
+
+        case 1: // Kick
+          CallCommand("kick", playername);
+          break;
+        case 2: // Ban
+          CallCommand("ban", playername);
+          break;
+        case 3: // Make OP
+          CallCommand(Client_IsOP(client) ? "deop" : "makeop", playername);
+          break;
+        case 4: // Info
+          PrintPlayerInfo(client);
+          break;
+      }
+      DestroyMenu(hMenu);
+    }
   }
 }
 

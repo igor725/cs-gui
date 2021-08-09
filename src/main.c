@@ -15,8 +15,9 @@ THREAD_FUNC(WindowThread) {
   return 0;
 }
 
-void HandshakeEvent(Client *client) {
-  Backend_AddUser(Client_GetName(client));
+void SpawnEvent(Client *client) {
+  if(client->playerData->firstSpawn)
+    Backend_AddUser(Client_GetName(client));
 }
 
 void DisconnectEvent(Client *client) {
@@ -26,7 +27,7 @@ void DisconnectEvent(Client *client) {
 Plugin_SetVersion(1)
 cs_bool Plugin_Load(void) {
   GuiThread = Thread_Create(WindowThread, NULL, false);
-  Event_RegisterVoid(EVT_ONHANDSHAKEDONE, (evtVoidCallback)HandshakeEvent);
+  Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
   Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
 
   return true;
