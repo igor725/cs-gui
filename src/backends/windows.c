@@ -2,34 +2,30 @@
 #pragma comment(lib, "user32")
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-HANDLE hCursor, hConsole, hInput, hSend, hList;
+HANDLE hWnd_g, hCursor, hConsole, hInput, hSend, hList;
+WNDCLASS wc = {
+  .lpfnWndProc = WindowProc,
+  .lpszClassName = "CServer Window Class"
+};
 
-cs_str wndclass = "CServer Window Class";
 
 #define BUFFER_SIZE 80 * 64
 cs_char conbuff[BUFFER_SIZE];
 cs_size buffpos = 0;
 
 void Backend_CreateWindow(void) {
-  HINSTANCE hInst = GetModuleHandle(NULL);
-
-  WNDCLASS wc = {
-    .lpfnWndProc = WindowProc,
-    .lpszClassName = wndclass,
-    .hInstance = hInst
-  };
-
   RegisterClass(&wc);
 
-  HWND hWnd = CreateWindowEx(
-    0, wndclass, "Minecraft Classic server",
+  hWnd_g = CreateWindowEx(
+    0, wc.lpszClassName,
+    "Minecraft Classic server",
     WS_OVERLAPPEDWINDOW, CW_USEDEFAULT,
     CW_USEDEFAULT, 854, 477,
-    NULL, NULL, hInst, NULL
+    NULL, NULL, NULL, NULL
   );
 
-  if(!hWnd) return;
-  ShowWindow(hWnd, SW_SHOW);
+  if(!hWnd_g) return;
+  ShowWindow(hWnd_g, SW_SHOW);
 }
 
 static void AppendString(cs_str str) {
@@ -112,12 +108,31 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
   return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
-void Backend_WindowLoop(cs_bool *notclosed) {
+void Backend_AddUser(cs_str name) {
+  SendMessage(hList, LB_ADDSTRING, (WPARAM)0, (LPARAM)name);
+}
+
+void Backend_RemoveUser(cs_str name) {
+  cs_char tmp[64];
+  for(cs_int32 i = 0; i < SendMessage(hList, LB_GETCOUNT, 0, 0); i++) {
+    LRESULT len = SendMessage(hList, LB_GETTEXT, (WPARAM)i, (LPARAM)tmp);
+    if(len && String_CaselessCompare2(name, tmp, len)) {
+      SendMessage(hList, LB_DELETESTRING, (WPARAM)i, (LPARAM)NULL);
+      break;
+    }
+  }
+}
+
+void Backend_CloseWindow(void) {
+  DestroyWindow(hWnd_g);
+  UnregisterClass(wc.lpszClassName, wc.hInstance);
+}
+
+void Backend_WindowLoop(void) {
   MSG msg;
 
   while(GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
-    if(!*notclosed) break;
   }
 }
