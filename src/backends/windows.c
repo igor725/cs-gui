@@ -9,11 +9,6 @@ WNDCLASS wc = {
   .lpszClassName = "CServer Window Class"
 };
 
-
-#define BUFFER_SIZE 80 * 64
-cs_char conbuff[BUFFER_SIZE];
-cs_size buffpos = 0;
-
 void Backend_CreateWindow(void) {
   RegisterClass(&wc);
 
@@ -26,26 +21,6 @@ void Backend_CreateWindow(void) {
   )) == NULL) return;
 
   ShowWindow(hWnd_g, SW_SHOW);
-}
-
-static void AppendOutput(cs_str str) {
-  if(buffpos + 160 >= BUFFER_SIZE) {
-    cs_str fn = String_FirstChar(conbuff, '\n');
-    cs_size offset = fn - conbuff + 1;
-
-    cs_char temp;
-    for(cs_uintptr t = 0; t < buffpos; t++) {
-      temp = conbuff[t];
-      conbuff[t] = conbuff[t + offset];
-      conbuff[t + offset] = '\0';
-    }
-    buffpos -= offset;
-  }
-  buffpos += String_Copy(conbuff + buffpos, BUFFER_SIZE, str);
-  SetWindowText(hConsole, conbuff);
-  SendMessage(hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
-  SendMessage(hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
-  SendMessage(hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
 }
 
 static void SetupWindow(HWND hWnd) {
@@ -96,7 +71,7 @@ static void CallCommand(cs_str cmd, cs_str args) {
   if(haveOutput) {
     Log_Info(out);
     String_Append(out, MAX_CMD_OUT, "\r\n");
-    AppendOutput(out);
+    Backend_AppendLog(out);
   }
 }
 
@@ -122,7 +97,7 @@ static void PrintPlayerInfo(Client *client) {
     World_GetName(Client_GetWorld(client)),
     Client_GetModel(client)
   );
-  AppendOutput(buf);
+  Backend_AppendLog(buf);
 }
 
 static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
@@ -210,6 +185,13 @@ void Backend_RemoveUser(cs_str name) {
 void Backend_CloseWindow(void) {
   DestroyWindow(hWnd_g);
   UnregisterClass(wc.lpszClassName, wc.hInstance);
+}
+
+void Backend_SetConsoleText(cs_str txt) {
+  SetWindowText(hConsole, txt);
+  SendMessage(hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
+  SendMessage(hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
+  SendMessage(hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
 }
 
 void Backend_WindowLoop(void) {
