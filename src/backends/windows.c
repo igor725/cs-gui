@@ -17,15 +17,14 @@ cs_size buffpos = 0;
 void Backend_CreateWindow(void) {
   RegisterClass(&wc);
 
-  hWnd_g = CreateWindowEx(
-    0, wc.lpszClassName,
+  if((hWnd_g = CreateWindow(
+    wc.lpszClassName,
     "Minecraft Classic server",
     WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME, CW_USEDEFAULT,
     CW_USEDEFAULT, 854, 477,
     NULL, NULL, NULL, NULL
-  );
+  )) == NULL) return;
 
-  if(!hWnd_g) return;
   ShowWindow(hWnd_g, SW_SHOW);
 }
 
