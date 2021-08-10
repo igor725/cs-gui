@@ -4,18 +4,23 @@
 
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-HANDLE hWnd_g, hCursor, hConsole, hInput, hSend, hList;
-WNDPROC oldInputProc;
-WNDCLASS wc = {
-  .lpfnWndProc = WindowProc,
-  .lpszClassName = "CServer Window Class"
+HANDLE hDefaultCursor;
+struct {
+  HANDLE hWnd, hConsole, hInput, hSend, hList;
+  WNDPROC lpfnInputProc;
+  WNDCLASS wc;
+} mainCTX = {
+  .wc = {
+    .lpfnWndProc = WindowProc,
+    .lpszClassName = "CServer Window Class"
+  }
 };
 
 static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
   cs_char playername[64];
-  LRESULT item = SendMessage(hList, LB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+  LRESULT item = SendMessage(mainCTX.hList, LB_GETCURSEL, (WPARAM)0, (LPARAM)0);
   if(item != LB_ERR) {
-    SendMessage(hList, LB_GETTEXT, (WPARAM)item, (LPARAM)playername);
+    SendMessage(mainCTX.hList, LB_GETTEXT, (WPARAM)item, (LPARAM)playername);
     Client *client = Client_GetByName(playername);
     if(client) {
       HMENU hMenu = CreatePopupMenu();
@@ -52,29 +57,29 @@ static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
 
 static void SetupWindow(HWND hWnd) {
   HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-  hCursor = LoadCursor(NULL, IDC_ARROW);
+  hDefaultCursor = LoadCursor(NULL, IDC_ARROW);
 
-  hConsole = CreateWindowEx(
+  mainCTX.hConsole = CreateWindowEx(
     0, "EDIT", NULL,
     WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
     ES_LEFT | ES_MULTILINE | ES_READONLY,
     0, 0, 674, 418, hWnd, (HMENU)100, hInst, NULL
   );
 
-  hInput = CreateWindowEx(
+  mainCTX.hInput = CreateWindowEx(
     0, "EDIT", NULL,
     WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
     0, 418, 754, 20, hWnd, (HMENU)101, hInst, NULL
   );
-  oldInputProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)subInputProc);
+  mainCTX.lpfnInputProc = (WNDPROC)SetWindowLongPtr(mainCTX.hInput, GWLP_WNDPROC, (LONG_PTR)subInputProc);
 
-  hSend = CreateWindowEx(
+  mainCTX.hSend = CreateWindowEx(
     0, "BUTTON", "Send",
     WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON,
     754, 418, 100, 20, hWnd, (HMENU)102, hInst, NULL
   );
 
-  hList = CreateWindowEx(
+  mainCTX.hList = CreateWindowEx(
     0, "LISTBOX", NULL,
     WS_CHILD | WS_VISIBLE | WS_BORDER,
     674, 0, 180, 418, hWnd, (HMENU)103, hInst, NULL
@@ -91,11 +96,11 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
       return FALSE;
     case WM_SETCURSOR:
       if((HWND)wParam == hWnd) {
-        SetCursor(hCursor);
+        SetCursor(hDefaultCursor);
         return TRUE;
       } else break;
     case WM_CONTEXTMENU:
-      if((HWND)wParam == hList)
+      if((HWND)wParam == mainCTX.hList)
         OpenPlayerContextMenu(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
       break;
     case WM_COMMAND:
@@ -118,15 +123,15 @@ LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
           return 0;
       }
     default:
-      return CallWindowProc(oldInputProc, hWnd, uMsg, wParam, lParam);
+      return CallWindowProc(mainCTX.lpfnInputProc, hWnd, uMsg, wParam, lParam);
   }
 }
 
 void Backend_CreateWindow(void) {
-  RegisterClass(&wc);
+  RegisterClass(&mainCTX.wc);
 
-  if((hWnd_g = CreateWindow(
-    wc.lpszClassName,
+  if((mainCTX.hWnd = CreateWindow(
+    mainCTX.wc.lpszClassName,
     "Minecraft Classic server",
     WS_OVERLAPPEDWINDOW &
     ~(WS_THICKFRAME | WS_MAXIMIZEBOX),
@@ -134,42 +139,42 @@ void Backend_CreateWindow(void) {
     854, 477, NULL, NULL, NULL, NULL
   )) == NULL) return;
 
-  ShowWindow(hWnd_g, SW_SHOW);
+  ShowWindow(mainCTX.hWnd, SW_SHOW);
 }
 
 void Backend_AddUser(cs_str name) {
-  SendMessage(hList, LB_ADDSTRING, (WPARAM)0, (LPARAM)name);
+  SendMessage(mainCTX.hList, LB_ADDSTRING, (WPARAM)0, (LPARAM)name);
 }
 
 void Backend_RemoveUser(cs_str name) {
   cs_char tmp[64];
-  for(cs_int32 i = 0; i < SendMessage(hList, LB_GETCOUNT, 0, 0); i++) {
-    LRESULT len = SendMessage(hList, LB_GETTEXT, (WPARAM)i, (LPARAM)tmp);
+  for(cs_int32 i = 0; i < SendMessage(mainCTX.hList, LB_GETCOUNT, 0, 0); i++) {
+    LRESULT len = SendMessage(mainCTX.hList, LB_GETTEXT, (WPARAM)i, (LPARAM)tmp);
     if(len && String_CaselessCompare2(name, tmp, len)) {
-      SendMessage(hList, LB_DELETESTRING, (WPARAM)i, (LPARAM)0);
+      SendMessage(mainCTX.hList, LB_DELETESTRING, (WPARAM)i, (LPARAM)0);
       break;
     }
   }
 }
 
 void Backend_CloseWindow(void) {
-  DestroyWindow(hWnd_g);
-  UnregisterClass(wc.lpszClassName, wc.hInstance);
+  DestroyWindow(mainCTX.hWnd);
+  UnregisterClass(mainCTX.wc.lpszClassName, mainCTX.wc.hInstance);
 }
 
 void Backend_SetConsoleText(cs_str txt) {
-  SetWindowText(hConsole, txt);
-  SendMessage(hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
-  SendMessage(hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
-  SendMessage(hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
+  SetWindowText(mainCTX.hConsole, txt);
+  SendMessage(mainCTX.hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
+  SendMessage(mainCTX.hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
+  SendMessage(mainCTX.hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
 }
 
 cs_size Backend_GetInputText(cs_char *buff, cs_size len) {
-  return SendMessage(hInput, WM_GETTEXT, (WPARAM)len, (LPARAM)buff);
+  return SendMessage(mainCTX.hInput, WM_GETTEXT, (WPARAM)len, (LPARAM)buff);
 }
 
 cs_bool Backend_SetInputText(cs_str txt) {
-  return (cs_bool)SendMessage(hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
+  return (cs_bool)SendMessage(mainCTX.hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
 }
 
 void Backend_WindowLoop(void) {
