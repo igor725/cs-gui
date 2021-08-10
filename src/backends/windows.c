@@ -128,9 +128,10 @@ void Backend_CreateWindow(void) {
   if((hWnd_g = CreateWindow(
     wc.lpszClassName,
     "Minecraft Classic server",
-    WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME, CW_USEDEFAULT,
-    CW_USEDEFAULT, 854, 477,
-    NULL, NULL, NULL, NULL
+    WS_OVERLAPPEDWINDOW &
+    ~(WS_THICKFRAME | WS_MAXIMIZEBOX),
+    CW_USEDEFAULT, CW_USEDEFAULT,
+    854, 477, NULL, NULL, NULL, NULL
   )) == NULL) return;
 
   ShowWindow(hWnd_g, SW_SHOW);
