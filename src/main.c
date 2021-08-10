@@ -4,14 +4,11 @@
 #include <event.h>
 #include "backend.h"
 
-Thread GuiThread;
-
 THREAD_FUNC(WindowThread) {
   (void)param;
   Backend_CreateWindow();
   Backend_WindowLoop();
   Server_Active = false;
-  GuiThread = NULL;
   return 0;
 }
 
@@ -34,7 +31,7 @@ void MessageEvent(onMessage *a) {
 
 Plugin_SetVersion(1)
 cs_bool Plugin_Load(void) {
-  GuiThread = Thread_Create(WindowThread, NULL, false);
+  Thread_Create(WindowThread, NULL, true);
   Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
   Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
   Event_RegisterVoid(EVT_ONMESSAGE, (evtVoidCallback)MessageEvent);
