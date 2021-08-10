@@ -6,9 +6,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HANDLE hDefaultCursor;
 struct {
-  HANDLE hWnd, hConsole, hInput, hSend, hList;
+  HANDLE hWnd, hOutput, hInput, hSend, hList;
   WNDPROC lpfnInputProc;
-  WNDCLASS wc;
+  const WNDCLASS wc;
 } mainCTX = {
   .wc = {
     .lpfnWndProc = WindowProc,
@@ -59,7 +59,7 @@ static void SetupWindow(HWND hWnd) {
   HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
   hDefaultCursor = LoadCursor(NULL, IDC_ARROW);
 
-  mainCTX.hConsole = CreateWindowEx(
+  mainCTX.hOutput = CreateWindowEx(
     0, "EDIT", NULL,
     WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
     ES_LEFT | ES_MULTILINE | ES_READONLY,
@@ -95,7 +95,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
       PostQuitMessage(0);
       return FALSE;
     case WM_SETCURSOR:
-      if((HWND)wParam == hWnd) {
+      if((HWND)wParam == hWnd || (HWND)wParam == mainCTX.hOutput) {
         SetCursor(hDefaultCursor);
         return TRUE;
       } else break;
@@ -104,9 +104,14 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         OpenPlayerContextMenu(hWnd, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
       break;
     case WM_COMMAND:
-      if(LOWORD(wParam) == 102 && HIWORD(wParam) == BN_CLICKED) {
-        ExecuteUserCommand();
-        return TRUE;
+      if((HWND)lParam == mainCTX.hSend) {
+        if(LOWORD(wParam) == 102 && HIWORD(wParam) == BN_CLICKED) {
+          ExecuteUserCommand();
+          return TRUE;
+        }
+      } else if((HWND)lParam == mainCTX.hOutput) {
+        if(HIWORD(wParam) == EN_SETFOCUS)
+          HideCaret(mainCTX.hOutput);
       }
       return FALSE;
   }
@@ -163,10 +168,10 @@ void Backend_CloseWindow(void) {
 }
 
 void Backend_SetConsoleText(cs_str txt) {
-  SetWindowText(mainCTX.hConsole, txt);
-  SendMessage(mainCTX.hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
-  SendMessage(mainCTX.hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
-  SendMessage(mainCTX.hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
+  SetWindowText(mainCTX.hOutput, txt);
+  SendMessage(mainCTX.hOutput, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
+  SendMessage(mainCTX.hOutput, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
+  SendMessage(mainCTX.hOutput, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
 }
 
 cs_size Backend_GetInputText(cs_char *buff, cs_size len) {
