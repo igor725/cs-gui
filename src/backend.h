@@ -1,5 +1,7 @@
 #ifndef BACKEND_H
 #define BACKEND_H
+#include <core.h>
+
 void Backend_CreateWindow(void);
 void Backend_AddUser(cs_str name);
 void Backend_RemoveUser(cs_str name);

@@ -1,3 +1,4 @@
+#include <core.h>
 #include <windows.h>
 #include <windowsx.h>
 #pragma comment(lib, "user32")
