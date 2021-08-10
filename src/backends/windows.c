@@ -2,105 +2,14 @@
 #include <windowsx.h>
 #pragma comment(lib, "user32")
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HANDLE hWnd_g, hCursor, hConsole, hInput, hSend, hList;
+WNDPROC oldInputProc;
 WNDCLASS wc = {
   .lpfnWndProc = WindowProc,
   .lpszClassName = "CServer Window Class"
 };
-
-void Backend_CreateWindow(void) {
-  RegisterClass(&wc);
-
-  if((hWnd_g = CreateWindow(
-    wc.lpszClassName,
-    "Minecraft Classic server",
-    WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME, CW_USEDEFAULT,
-    CW_USEDEFAULT, 854, 477,
-    NULL, NULL, NULL, NULL
-  )) == NULL) return;
-
-  ShowWindow(hWnd_g, SW_SHOW);
-}
-
-static void SetupWindow(HWND hWnd) {
-  HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
-  hCursor = LoadCursor(NULL, IDC_ARROW);
-
-  hConsole = CreateWindowEx(
-    0, "EDIT", NULL,
-    WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
-    ES_LEFT | ES_MULTILINE | ES_READONLY,
-    0, 0, 674, 418, hWnd, (HMENU)100, hInst, NULL
-  );
-
-  hInput = CreateWindowEx(
-    0, "EDIT", NULL,
-    WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
-    0, 418, 754, 20, hWnd, (HMENU)101, hInst, NULL
-  );
-
-  hSend = CreateWindowEx(
-    0, "BUTTON", "Send",
-    WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON,
-    754, 418, 100, 20, hWnd, (HMENU)102, hInst, NULL
-  );
-
-  hList = CreateWindowEx(
-    0, "LISTBOX", NULL,
-    WS_CHILD | WS_VISIBLE | WS_BORDER,
-    674, 0, 180, 418, hWnd, (HMENU)103, hInst, NULL
-  );
-}
-
-static void CallCommand(cs_str cmd, cs_str args) {
-  CommandCallData ccdata;
-  cs_char out[MAX_CMD_OUT];
-  cs_bool haveOutput = true;
-
-  Command *opc = Command_GetByName(cmd);
-  if(opc) {
-    ccdata.caller = NULL;
-    ccdata.command = opc;
-    ccdata.args = args;
-    ccdata.out = out;
-    haveOutput = opc->func(&ccdata);
-  } else
-    String_Copy(out, MAX_CMD_OUT, "Unknown command");
-
-  if(haveOutput) {
-    Log_Info(out);
-    String_Append(out, MAX_CMD_OUT, "\r\n");
-    Backend_AppendLog(out);
-    Backend_UpdateLog();
-  }
-}
-
-static void PrintPlayerInfo(Client *client) {
-  cs_char buf[512];
-  String_FormatBuf(
-    buf, 512,
-    "Info about %s\r\n"
-    "  Client: %s\r\n"
-    "  Is OP: %s\r\n"
-    "  Ping: %d\r\n"
-    "  IP: %d.%d.%d.%d\r\n"
-    "  World: %s\r\n"
-    "  Player model: %d\r\n",
-    Client_GetName(client),
-    Client_GetAppName(client),
-    Client_IsOP(client) ? "yes" : "no",
-    Client_GetPing(client),
-    client->addr & 0xFF,
-    (client->addr >> 8) & 0xFF,
-    (client->addr >> 16) & 0xFF,
-    (client->addr >> 24) & 0xFF,
-    World_GetName(Client_GetWorld(client)),
-    Client_GetModel(client)
-  );
-  Backend_AppendLog(buf);
-  Backend_UpdateLog();
-}
 
 static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
   cs_char playername[64];
@@ -141,6 +50,37 @@ static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
   }
 }
 
+static void SetupWindow(HWND hWnd) {
+  HINSTANCE hInst = (HINSTANCE)GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
+  hCursor = LoadCursor(NULL, IDC_ARROW);
+
+  hConsole = CreateWindowEx(
+    0, "EDIT", NULL,
+    WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER |
+    ES_LEFT | ES_MULTILINE | ES_READONLY,
+    0, 0, 674, 418, hWnd, (HMENU)100, hInst, NULL
+  );
+
+  hInput = CreateWindowEx(
+    0, "EDIT", NULL,
+    WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT,
+    0, 418, 754, 20, hWnd, (HMENU)101, hInst, NULL
+  );
+  oldInputProc = (WNDPROC)SetWindowLongPtr(hInput, GWLP_WNDPROC, (LONG_PTR)subInputProc);
+
+  hSend = CreateWindowEx(
+    0, "BUTTON", "Send",
+    WS_CHILD | WS_VISIBLE | WS_BORDER | BS_DEFPUSHBUTTON,
+    754, 418, 100, 20, hWnd, (HMENU)102, hInst, NULL
+  );
+
+  hList = CreateWindowEx(
+    0, "LISTBOX", NULL,
+    WS_CHILD | WS_VISIBLE | WS_BORDER,
+    674, 0, 180, 418, hWnd, (HMENU)103, hInst, NULL
+  );
+}
+
 LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
   switch (uMsg) {
     case WM_CREATE:
@@ -160,13 +100,40 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
       break;
     case WM_COMMAND:
       if(LOWORD(wParam) == 102 && HIWORD(wParam) == BN_CLICKED) {
-        // TODO: Button click
+        ExecuteUserCommand();
         return TRUE;
       }
       return FALSE;
   }
 
   return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  switch(uMsg) {
+    case WM_KEYUP:
+      switch(wParam) {
+        case VK_RETURN:
+          ExecuteUserCommand();
+          return 0;
+      }
+    default:
+      return CallWindowProc(oldInputProc, hWnd, uMsg, wParam, lParam);
+  }
+}
+
+void Backend_CreateWindow(void) {
+  RegisterClass(&wc);
+
+  if((hWnd_g = CreateWindow(
+    wc.lpszClassName,
+    "Minecraft Classic server",
+    WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME, CW_USEDEFAULT,
+    CW_USEDEFAULT, 854, 477,
+    NULL, NULL, NULL, NULL
+  )) == NULL) return;
+
+  ShowWindow(hWnd_g, SW_SHOW);
 }
 
 void Backend_AddUser(cs_str name) {
@@ -194,6 +161,14 @@ void Backend_SetConsoleText(cs_str txt) {
   SendMessage(hConsole, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
   SendMessage(hConsole, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
   SendMessage(hConsole, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
+}
+
+cs_size Backend_GetInputText(cs_char *buff, cs_size len) {
+  return SendMessage(hInput, WM_GETTEXT, (WPARAM)len, (LPARAM)buff);
+}
+
+cs_bool Backend_SetInputText(cs_str txt) {
+  return (cs_bool)SendMessage(hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
 }
 
 void Backend_WindowLoop(void) {
