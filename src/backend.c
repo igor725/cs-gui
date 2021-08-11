@@ -21,6 +21,7 @@ static void CallCommand(cs_str cmd, cs_str args) {
     ccdata.command = opc;
     ccdata.args = args;
     ccdata.out = out;
+    *out = '\0';
     haveOutput = opc->func(&ccdata);
   } else
     String_Copy(out, MAX_CMD_OUT, "Unknown command");
@@ -36,7 +37,7 @@ static void CallCommand(cs_str cmd, cs_str args) {
 static void ExecuteUserCommand(void) {
   cs_char buffer[512];
   if(Backend_GetInputText(buffer, 512)) {
-    Backend_SetInputText("\0");
+    Backend_SetInputText("");
     Backend_AppendLog("> ");
     Backend_AppendLog(buffer);
     Backend_AppendLog("\r\n");
