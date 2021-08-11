@@ -85,9 +85,7 @@ void Backend_AppendLog(cs_str str) {
     cs_str fn = String_FirstChar(conbuff, '\n');
     cs_size offset = fn - conbuff + 1;
 
-    cs_char temp;
     for(cs_uintptr t = 0; t < buffpos; t++) {
-      temp = conbuff[t];
       conbuff[t] = conbuff[t + offset];
       conbuff[t + offset] = '\0';
     }
