@@ -81,17 +81,16 @@ static void PrintPlayerInfo(Client *client) {
 #endif
 
 void Backend_AppendLog(cs_str str) {
-  if(buffpos + 160 >= BUFFER_SIZE) {
-    cs_str fn = String_FirstChar(conbuff, '\n');
-    cs_size offset = fn - conbuff + 1;
-
-    for(cs_uintptr t = 0; t < buffpos; t++) {
-      conbuff[t] = conbuff[t + offset];
-      conbuff[t + offset] = '\0';
+  cs_size slen = String_Length(str);
+  if(buffpos + slen >= BUFFER_SIZE) {
+    cs_size shiftend = BUFFER_SIZE - slen;
+    for(cs_uintptr i = 0; i < shiftend; i++) {
+      conbuff[i] = conbuff[i + slen];
+      conbuff[i + slen] = '\0';
     }
-    buffpos -= offset;
+    buffpos -= slen;
   }
-  buffpos += String_Copy(conbuff + buffpos, BUFFER_SIZE, str);
+  buffpos += String_Copy(conbuff + buffpos, BUFFER_SIZE - buffpos, str);
 }
 
 void Backend_UpdateLog(void) {
