@@ -132,6 +132,7 @@ LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     default:
       return CallWindowProc(mainCTX.lpfnInputProc, hWnd, uMsg, wParam, lParam);
   }
+  return 0;
 }
 
 void Backend_CreateWindow(void) {
@@ -170,10 +171,22 @@ void Backend_CloseWindow(void) {
 }
 
 void Backend_SetConsoleText(cs_str txt) {
-  SetWindowText(mainCTX.hOutput, txt);
+  SendMessage(mainCTX.hOutput, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
+}
+
+cs_size Backend_ScrollToEnd(void) {
   SendMessage(mainCTX.hOutput, EM_SETSEL, (WPARAM)0, (LPARAM)-1);
   SendMessage(mainCTX.hOutput, EM_SETSEL, (WPARAM)-1, (LPARAM)-1);
   SendMessage(mainCTX.hOutput, EM_SCROLLCARET, (WPARAM)0, (LPARAM)0);
+  return 0;
+}
+
+cs_size Backend_GetScrollPosition(void) {
+  return 0;
+}
+
+cs_size Backend_GetScrollEnd(void) {
+  return 0;
 }
 
 cs_size Backend_GetInputText(cs_char *buff, cs_size len) {

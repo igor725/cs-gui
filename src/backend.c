@@ -9,6 +9,8 @@
 #define BUFFER_SIZE 80 * 64
 cs_char conbuff[BUFFER_SIZE];
 cs_size buffpos = 0;
+cs_bool scrolltoend = true;
+cs_size endpos = 0;
 
 static void CallCommand(cs_str cmd, cs_str args) {
   CommandCallData ccdata;
@@ -94,5 +96,12 @@ void Backend_AppendLog(cs_str str) {
 }
 
 void Backend_UpdateLog(void) {
+  if(Backend_GetScrollPosition() != endpos) {
+    scrolltoend = false;
+  }
   Backend_SetConsoleText(conbuff);
+  if(scrolltoend)
+    endpos = Backend_ScrollToEnd();
+  else
+    endpos = Backend_GetScrollEnd();
 }
