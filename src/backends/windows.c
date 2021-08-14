@@ -132,7 +132,6 @@ LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
     default:
       return CallWindowProc(mainCTX.lpfnInputProc, hWnd, uMsg, wParam, lParam);
   }
-  return 0;
 }
 
 void Backend_CreateWindow(void) {

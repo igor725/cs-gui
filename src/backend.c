@@ -50,6 +50,8 @@ static void ExecuteUserCommand(void) {
   }
 }
 
+#define YESNO(exp) (exp ? "yes" : "no")
+
 static void PrintPlayerInfo(Client *client) {
   cs_char buf[512];
   String_FormatBuf(
@@ -57,13 +59,15 @@ static void PrintPlayerInfo(Client *client) {
     "Info about %s\r\n"
     "  Client: %s\r\n"
     "  Is OP: %s\r\n"
+    "  Is in game: %s\r\n"
     "  Ping: %d\r\n"
     "  IP: %d.%d.%d.%d\r\n"
     "  World: %s\r\n"
     "  Player model: %d\r\n",
     Client_GetName(client),
     Client_GetAppName(client),
-    Client_IsOP(client) ? "yes" : "no",
+    YESNO(Client_IsOP(client)),
+    YESNO(Client_IsInGame(client)),
     Client_GetPing(client),
     client->addr & 0xFF,
     (client->addr >> 8) & 0xFF,
