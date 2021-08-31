@@ -38,7 +38,8 @@ cs_bool Plugin_Load(void) {
   return true;
 }
 
-cs_bool Plugin_Unload(void) {
+cs_bool Plugin_Unload(cs_bool force) {
+  (void)force;
   Backend_CloseWindow();
   return true;
 }
