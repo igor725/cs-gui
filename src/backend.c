@@ -54,6 +54,7 @@ static void ExecuteUserCommand(void) {
 
 static void PrintPlayerInfo(Client *client) {
   cs_char buf[512];
+  cs_uint32 addr = Client_GetAddr(client);
   String_FormatBuf(
     buf, 512,
     "Info about %s\r\n"
@@ -69,10 +70,10 @@ static void PrintPlayerInfo(Client *client) {
     YESNO(Client_IsOP(client)),
     YESNO(Client_CheckState(client, PLAYER_STATE_INGAME)),
     Client_GetPing(client),
-    client->addr & 0xFF,
-    (client->addr >> 8) & 0xFF,
-    (client->addr >> 16) & 0xFF,
-    (client->addr >> 24) & 0xFF,
+    addr & 0xFF,
+    (addr >> 8) & 0xFF,
+    (addr >> 16) & 0xFF,
+    (addr >> 24) & 0xFF,
     World_GetName(Client_GetWorld(client)),
     Client_GetModel(client)
   );
