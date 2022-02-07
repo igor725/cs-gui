@@ -2,6 +2,7 @@
 #include <platform.h>
 #include <server.h>
 #include <event.h>
+#include <log.h>
 #include "backend.h"
 
 THREAD_FUNC(WindowThread) {
@@ -21,11 +22,9 @@ void DisconnectEvent(Client *client) {
 	Backend_RemoveUser(Client_GetName(client));
 }
 
-void MessageEvent(onMessage *a) {
-	Backend_AppendLog(Client_GetName(a->client));
-	Backend_AppendLog(": ");
-	Backend_AppendLog(a->message);
-	Backend_AppendLog("\r\n");
+void OnLog(void *a) {
+	LogBuffer *buf = (LogBuffer *)a;
+	Backend_AppendLog(buf->data);
 	Backend_UpdateLog();
 }
 
@@ -34,7 +33,7 @@ cs_bool Plugin_Load(void) {
 	Thread_Create(WindowThread, NULL, true);
 	Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
 	Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
-	Event_RegisterVoid(EVT_ONMESSAGE, (evtVoidCallback)MessageEvent);
+	Event_RegisterVoid(EVT_ONLOG, (evtVoidCallback)OnLog);
 	return true;
 }
 
