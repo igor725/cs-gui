@@ -81,9 +81,9 @@ static void PrintPlayerInfo(Client *client) {
   Backend_UpdateLog();
 }
 
-#if defined(WINDOWS)
+#if defined(CORE_USE_WINDOWS)
 #include "backends/windows.c"
-#elif defined(UNIX)
+#elif defined(CORE_USE_UNIX)
 #include "backends/linux.c"
 #endif
 
