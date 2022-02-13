@@ -4,6 +4,7 @@
 #include <event.h>
 #include <log.h>
 #include "backend.h"
+#include <plugin.h>
 
 THREAD_FUNC(WindowThread) {
 	(void)param;
