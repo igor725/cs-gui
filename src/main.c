@@ -14,9 +14,10 @@ THREAD_FUNC(WindowThread) {
 	return 0;
 }
 
-void SpawnEvent(Client *client) {
-	if(Client_IsFirstSpawn(client))
-		Backend_AddUser(Client_GetName(client));
+void SpawnEvent(void *param) {
+	onSpawn *a = (onSpawn *)param;
+	if(Client_IsFirstSpawn(a->client))
+		Backend_AddUser(Client_GetName(a->client));
 }
 
 void DisconnectEvent(Client *client) {
