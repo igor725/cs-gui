@@ -1,5 +1,6 @@
 #include <core.h>
 #include <platform.h>
+#include <client.h>
 #include <server.h>
 #include <event.h>
 #include <log.h>
@@ -30,7 +31,8 @@ void OnLog(void *a) {
 	Backend_UpdateLog();
 }
 
-Plugin_SetVersion(1)
+Plugin_SetVersion(1);
+
 cs_bool Plugin_Load(void) {
 	Thread_Create(WindowThread, NULL, true);
 	Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
