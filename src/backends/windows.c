@@ -40,13 +40,13 @@ static void OpenPlayerContextMenu(HWND hWnd, cs_int32 x, cs_int32 y) {
 				case 0: break;
 
 				case 1: // Kick
-					CallCommand("kick", playername);
+					Client_Kick(client, NULL);
 					break;
 				case 2: // Ban
-					CallCommand("ban", playername);
+					// TODO: прокинуть интерфейс до плагина base и связать с gui
 					break;
 				case 3: // Make OP
-					CallCommand(Client_IsOP(client) ? "deop" : "makeop", playername);
+					Client_SetOP(client, !Client_IsOP(client));
 					break;
 				case 4: // Info
 					PrintPlayerInfo(client);
