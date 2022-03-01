@@ -2,12 +2,13 @@
 #include <client.h>
 #include <windows.h>
 #include <windowsx.h>
+#include "backend.h"
 #pragma comment(lib, "user32")
 
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-HANDLE hDefaultCursor;
-struct {
+static LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static HANDLE hDefaultCursor;
+static struct {
 	HANDLE hWnd, hOutput, hInput, hSend, hList;
 	WNDPROC lpfnInputProc;
 	const WNDCLASS wc;
