@@ -1,11 +1,12 @@
 #include <core.h>
 #include <platform.h>
-#include <gtk/gtk.h>
+#include <gtk-3.0/gtk/gtk.h>
 #include "backend.h"
 
 struct {
 	gboolean active;
 	GtkTextBuffer *tbuf;
+	GtkEntryBuffer *ebuf;
 } mainCTX = {
 	.active = false
 };
@@ -57,12 +58,30 @@ static void activate(GtkApplication *app, gpointer ud) {
 	gtk_window_set_default_size(GTK_WINDOW(window), 870, 477);
 	g_signal_connect(window, "destroy", G_CALLBACK(destroy), NULL);
 
+	GtkWidget *grid = gtk_grid_new();
+	gtk_grid_set_column_homogeneous(GTK_GRID(grid), true);
+	gtk_grid_set_row_homogeneous(GTK_GRID(grid), true);
+	gtk_container_add(GTK_CONTAINER(window), grid);
+
 	GtkWidget *output = gtk_text_view_new();
 	gtk_text_view_set_cursor_visible(GTK_TEXT_VIEW(output), false);
 	gtk_text_view_set_editable(GTK_TEXT_VIEW(output), false);
 	mainCTX.tbuf = gtk_text_view_get_buffer(GTK_TEXT_VIEW(output));
-	gtk_window_set_child(GTK_WINDOW(window), output);
+	gtk_grid_attach(GTK_GRID(grid), output, 0, 0, 1, 1);
 
+	GtkWidget *list = gtk_list_box_new();
+
+	gtk_grid_attach(GTK_GRID(grid), list, 1, 0, 1, 1);
+
+	GtkWidget *entry = gtk_entry_new();
+	mainCTX.ebuf = gtk_entry_get_buffer(GTK_ENTRY(entry));
+	gtk_grid_attach(GTK_GRID(grid), entry, 0, 1, 1, 1);
+
+	GtkWidget *button = gtk_button_new();
+	gtk_button_set_label(GTK_BUTTON(button), "Send");
+	gtk_grid_attach(GTK_GRID(grid), button, 1, 1, 1, 1);
+
+	gtk_widget_show_all(window);
 	gtk_window_present(GTK_WINDOW(window));
 	mainCTX.active = true;
 	Backend_UpdateLog();

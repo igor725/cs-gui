@@ -34,11 +34,8 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/../**",
                 "${workspaceFolder}/../core/src/**",
-                "/usr/include/gtk-4.0/**",
-                "/usr/include/graphene-1.0",
                 "/usr/include/**",
-                "/usr/lib/x86_64-linux-gnu/glib-2.0/include",
-                "/usr/lib/x86_64-linux-gnu/graphene-1.0/include"
+                "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "gnu17",
