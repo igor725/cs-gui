@@ -6,7 +6,6 @@
 #include <world.h>
 #include "backend.h"
 
-#define BUFFER_SIZE 80 * 64
 cs_char conbuff[BUFFER_SIZE];
 cs_size buffpos = 0;
 cs_bool scrolltoend = true;
@@ -61,8 +60,7 @@ static void PrintPlayerInfo(Client *client) {
 #include "backends/linux.c"
 #endif
 
-void Backend_AppendLog(cs_str str) {
-	cs_size slen = String_Length(str);
+void Backend_ShiftBuffer(cs_size slen) {
 	if(buffpos + slen >= BUFFER_SIZE) {
 		cs_size shiftend = BUFFER_SIZE - slen;
 		for(cs_uintptr i = 0; i < shiftend; i++) {
@@ -71,6 +69,10 @@ void Backend_AppendLog(cs_str str) {
 		}
 		buffpos -= slen;
 	}
+}
+
+void Backend_AppendLog(cs_str str) {
+	Backend_ShiftBuffer(String_Length(str));
 	buffpos += String_Copy(conbuff + buffpos, BUFFER_SIZE - buffpos, str);
 }
 

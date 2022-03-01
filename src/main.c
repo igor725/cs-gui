@@ -1,4 +1,5 @@
 #include <core.h>
+#include <str.h>
 #include <platform.h>
 #include <client.h>
 #include <server.h>
@@ -25,9 +26,21 @@ void DisconnectEvent(Client *client) {
 	Backend_RemoveUser(Client_GetName(client));
 }
 
+static cs_str escend = "HfABCDsuJKmhlp";
+
 void OnLog(void *a) {
 	LogBuffer *buf = (LogBuffer *)a;
-	Backend_AppendLog(buf->data);
+	Backend_ShiftBuffer(String_Length(buf->data));
+	for(cs_char *cc = buf->data; *cc != '\0' && buffpos < BUFFER_SIZE; cc++) {
+		if(*cc == '\x1B') {
+			cs_bool isInEscape = true;
+			while(*++cc != '\0' && isInEscape)
+				for(cs_str ce = escend; *ce != '\0' && isInEscape; ce++)
+					if(*ce == *cc) isInEscape = false;
+		}
+
+		conbuff[buffpos++] = *cc;
+	}
 	Backend_UpdateLog();
 }
 

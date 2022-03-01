@@ -2,6 +2,10 @@
 #define BACKEND_H
 #include <core.h>
 
+#define BUFFER_SIZE 80 * 64
+extern cs_char conbuff[BUFFER_SIZE];
+extern cs_size buffpos;
+
 void Backend_CreateWindow(void);
 void Backend_AddUser(cs_str name);
 void Backend_RemoveUser(cs_str name);
@@ -15,6 +19,7 @@ cs_bool Backend_SetInputText(cs_str txt);
 void Backend_WindowLoop(void);
 
 // Shared between backends
+void Backend_ShiftBuffer(cs_size slen);
 void Backend_AppendLog(cs_str str);
 void Backend_UpdateLog(void);
 #endif
