@@ -16,19 +16,19 @@ THREAD_FUNC(WindowThread) {
 	return 0;
 }
 
-void SpawnEvent(void *param) {
+static void SpawnEvent(void *param) {
 	onSpawn *a = (onSpawn *)param;
 	if(Client_IsFirstSpawn(a->client))
 		Backend_AddUser(Client_GetName(a->client));
 }
 
-void DisconnectEvent(Client *client) {
+static void DisconnectEvent(Client *client) {
 	Backend_RemoveUser(Client_GetName(client));
 }
 
 static cs_str escend = "HfABCDsuJKmhlp";
 
-void OnLog(void *a) {
+static void LogEvent(void *a) {
 	LogBuffer *buf = (LogBuffer *)a;
 	Backend_ShiftBuffer(String_Length(buf->data));
 	for(cs_char *cc = buf->data; *cc != '\0' && buffpos < BUFFER_SIZE; cc++) {
@@ -50,7 +50,7 @@ cs_bool Plugin_Load(void) {
 	Thread_Create(WindowThread, NULL, true);
 	Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
 	Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
-	Event_RegisterVoid(EVT_ONLOG, (evtVoidCallback)OnLog);
+	Event_RegisterVoid(EVT_ONLOG, (evtVoidCallback)LogEvent);
 	return true;
 }
 
