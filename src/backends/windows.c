@@ -134,21 +134,6 @@ LRESULT CALLBACK subInputProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 	}
 }
 
-void Backend_CreateWindow(void) {
-	RegisterClass(&mainCTX.wc);
-
-	if((mainCTX.hWnd = CreateWindow(
-		mainCTX.wc.lpszClassName,
-		"Minecraft Classic server",
-		WS_OVERLAPPEDWINDOW &
-		~(WS_THICKFRAME | WS_MAXIMIZEBOX),
-		CW_USEDEFAULT, CW_USEDEFAULT,
-		854, 477, NULL, NULL, NULL, NULL
-	)) == NULL) return;
-
-	ShowWindow(mainCTX.hWnd, SW_SHOW);
-}
-
 void Backend_AddUser(cs_str name) {
 	SendMessage(mainCTX.hList, LB_ADDSTRING, (WPARAM)0, (LPARAM)name);
 }
@@ -162,11 +147,6 @@ void Backend_RemoveUser(cs_str name) {
 			break;
 		}
 	}
-}
-
-void Backend_CloseWindow(void) {
-	DestroyWindow(mainCTX.hWnd);
-	UnregisterClass(mainCTX.wc.lpszClassName, mainCTX.wc.hInstance);
 }
 
 void Backend_SetConsoleText(cs_str txt) {
@@ -192,15 +172,33 @@ cs_size Backend_GetInputText(cs_char *buff, cs_size len) {
 	return SendMessage(mainCTX.hInput, WM_GETTEXT, (WPARAM)len, (LPARAM)buff);
 }
 
-cs_bool Backend_SetInputText(cs_str txt) {
-	return (cs_bool)SendMessage(mainCTX.hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)txt);
+cs_bool Backend_ClearInputText(void) {
+	return (cs_bool)SendMessage(mainCTX.hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)"");
 }
 
 void Backend_WindowLoop(void) {
+	RegisterClass(&mainCTX.wc);
+
+	if((mainCTX.hWnd = CreateWindow(
+		mainCTX.wc.lpszClassName,
+		CSGUI_WINDOWTITLE,
+		WS_OVERLAPPEDWINDOW &
+		~(WS_THICKFRAME | WS_MAXIMIZEBOX),
+		CW_USEDEFAULT, CW_USEDEFAULT,
+		870, 477, NULL, NULL, NULL, NULL
+	)) == NULL) return;
+
+	ShowWindow(mainCTX.hWnd, SW_SHOW);
+
 	MSG msg;
 
 	while(GetMessage(&msg, NULL, 0, 0)) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+}
+
+void Backend_CloseWindow(void) {
+	DestroyWindow(mainCTX.hWnd);
+	UnregisterClass(mainCTX.wc.lpszClassName, mainCTX.wc.hInstance);
 }

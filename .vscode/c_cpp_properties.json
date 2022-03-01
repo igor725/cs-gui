@@ -27,6 +27,34 @@
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "windows-msvc-x86"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/../**",
+                "${workspaceFolder}/../core/src/**",
+                "/usr/include/gtk-4.0/**",
+                "/usr/include/**",
+                "/usr/lib/x86_64-linux-gnu/glib-2.0/include"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "defines": [
+                "_DEBUG",
+                "CORE_BUILD_PLUGIN"
+            ],
+            "compilerArgs": [],
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**",
+                    "${workspaceFolder}/../core/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

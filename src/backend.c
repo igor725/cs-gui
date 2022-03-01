@@ -14,7 +14,7 @@ cs_size endpos = 0;
 static void ExecuteUserCommand(void) {
 	cs_char buffer[512];
 	if(Backend_GetInputText(buffer, 512)) {
-		Backend_SetInputText("");
+		Backend_ClearInputText();
 		Backend_AppendLog("> ");
 		Backend_AppendLog(buffer);
 		Backend_AppendLog("\r\n");

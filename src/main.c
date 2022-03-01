@@ -10,7 +10,6 @@
 
 THREAD_FUNC(WindowThread) {
 	(void)param;
-	Backend_CreateWindow();
 	Backend_WindowLoop();
 	Server_Active = false;
 	return 0;
