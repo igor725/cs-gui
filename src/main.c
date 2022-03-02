@@ -62,5 +62,6 @@ cs_bool Plugin_Load(void) {
 cs_bool Plugin_Unload(cs_bool force) {
 	(void)force;
 	Backend_CloseWindow();
-	return Event_UnregisterBunch(events);
+	Event_UnregisterBunch(events);
+	return true;
 }
