@@ -177,6 +177,8 @@ cs_bool Backend_ClearInputText(void) {
 	return (cs_bool)SendMessage(mainCTX.hInput, WM_SETTEXT, (WPARAM)0, (LPARAM)"");
 }
 
+void Backend_PreLaunch(void) {}
+
 void Backend_WindowLoop(void) {
 	RegisterClass(&mainCTX.wc);
 

@@ -15,6 +15,7 @@ cs_size Backend_GetScrollPosition(void);
 cs_size Backend_GetScrollEnd(void);
 cs_size Backend_GetInputText(cs_char *buff, cs_size len);
 cs_bool Backend_ClearInputText(void);
+void Backend_PreLaunch(void);
 void Backend_WindowLoop(void);
 void Backend_CloseWindow(void);
 

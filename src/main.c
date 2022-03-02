@@ -46,6 +46,7 @@ static void LogEvent(void *a) {
 Plugin_SetVersion(1);
 
 cs_bool Plugin_Load(void) {
+	Backend_PreLaunch();
 	Thread_Create(WindowThread, NULL, true);
 	Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
 	Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
