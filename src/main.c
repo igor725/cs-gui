@@ -45,17 +45,22 @@ static void LogEvent(void *a) {
 
 Plugin_SetVersion(1);
 
+Event_DeclareBunch (events) {
+	EVENT_BUNCH_ADD('v', EVT_ONSPAWN, SpawnEvent)
+	EVENT_BUNCH_ADD('v', EVT_ONDISCONNECT, DisconnectEvent)
+	EVENT_BUNCH_ADD('v', EVT_ONLOG, LogEvent)
+
+	EVENT_BUNCH_END
+};
+
 cs_bool Plugin_Load(void) {
 	Backend_PreLaunch();
 	Thread_Create(WindowThread, NULL, true);
-	Event_RegisterVoid(EVT_ONSPAWN, (evtVoidCallback)SpawnEvent);
-	Event_RegisterVoid(EVT_ONDISCONNECT, (evtVoidCallback)DisconnectEvent);
-	Event_RegisterVoid(EVT_ONLOG, (evtVoidCallback)LogEvent);
-	return true;
+	return Event_RegisterBunch(events);
 }
 
 cs_bool Plugin_Unload(cs_bool force) {
 	(void)force;
 	Backend_CloseWindow();
-	return true;
+	return Event_UnregisterBunch(events);
 }
