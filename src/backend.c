@@ -41,7 +41,7 @@ static void PrintPlayerInfo(Client *client) {
 		Client_GetName(client),
 		Client_GetAppName(client),
 		YESNO(Client_IsOP(client)),
-		YESNO(Client_CheckState(client, PLAYER_STATE_INGAME)),
+		YESNO(Client_CheckState(client, CLIENT_STATE_INGAME)),
 		Client_GetPing(client),
 		(addr & 0xFF),
 		(addr >> 8) & 0xFF,
