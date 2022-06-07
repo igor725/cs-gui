@@ -36,6 +36,12 @@ static void LogEvent(void *a) {
 			while(*++cc != '\0' && isInEscape)
 				for(cs_str ce = escend; *ce != '\0' && isInEscape; ce++)
 					if(*ce == *cc) isInEscape = false;
+
+			if(*cc == '\0') {
+				conbuff[buffpos++] = '\r';
+				conbuff[buffpos++] = '\n';
+				continue;
+			}
 		}
 
 		conbuff[buffpos++] = *cc;

@@ -77,9 +77,8 @@ void Backend_AppendLog(cs_str str) {
 }
 
 void Backend_UpdateLog(void) {
-	if(Backend_GetScrollPosition() != endpos) {
+	if(Backend_GetScrollPosition() != endpos)
 		scrolltoend = false;
-	}
 	Backend_SetConsoleText(conbuff);
 	if(scrolltoend)
 		endpos = Backend_ScrollToEnd();
