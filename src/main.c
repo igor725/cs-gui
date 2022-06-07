@@ -1,3 +1,4 @@
+
 #include <core.h>
 #include <str.h>
 #include <platform.h>
@@ -5,8 +6,9 @@
 #include <server.h>
 #include <event.h>
 #include <log.h>
-#include "backend.h"
 #include <plugin.h>
+#include "backend.h"
+#include "interface.h"
 
 THREAD_FUNC(WindowThread) {
 	(void)param;
@@ -15,10 +17,8 @@ THREAD_FUNC(WindowThread) {
 	return 0;
 }
 
-static void SpawnEvent(void *param) {
-	onSpawn *a = (onSpawn *)param;
-	if(Client_IsFirstSpawn(a->client))
-		Backend_AddUser(Client_GetName(a->client));
+static void HandshakeEvent(onHandshakeDone *obj) {
+	Backend_AddUser(Client_GetName(obj->client));
 }
 
 static void DisconnectEvent(Client *client) {
@@ -52,16 +52,21 @@ static void LogEvent(void *a) {
 Plugin_SetVersion(1);
 
 Event_DeclareBunch (events) {
-	EVENT_BUNCH_ADD('v', EVT_ONSPAWN, SpawnEvent)
+	EVENT_BUNCH_ADD('v', EVT_ONHANDSHAKEDONE, HandshakeEvent)
 	EVENT_BUNCH_ADD('v', EVT_ONDISCONNECT, DisconnectEvent)
 	EVENT_BUNCH_ADD('v', EVT_ONLOG, LogEvent)
 
 	EVENT_BUNCH_END
 };
 
+void Plugin_RecvInterface(cs_str iname, void *iptr, cs_size isize) {
+	InterfaceReceiver(iname, iptr, isize);
+}
+
 cs_bool Plugin_Load(void) {
 	Backend_PreLaunch();
 	Thread_Create(WindowThread, NULL, true);
+	LoadInterfaces();
 	return Event_RegisterBunch(events);
 }
 

@@ -1,4 +1,5 @@
 LIBNAME="gtk+-3.0"
+CFLAGS="$CFLAGS -I.."
 
 if pkg-config --exists $LIBNAME; then
 	CFLAGS="$CFLAGS $(pkg-config --cflags $LIBNAME)"

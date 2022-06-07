@@ -4,7 +4,8 @@
             "name": "Win64",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/../core/src"
+                "${workspaceFolder}/../core/src",
+                "${workspaceFolder}/../**"
             ],
             "defines": [
                 "_DEBUG",
@@ -18,7 +19,8 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/../core/src"
+                "${workspaceFolder}/../core/src",
+                "${workspaceFolder}/../**"
             ],
             "defines": [
                 "_DEBUG",
